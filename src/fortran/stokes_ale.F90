@@ -1,4 +1,4 @@
-PROGRAM STOKESALEEXAMPLE
+PROGRAM stokes_ale
 
   !
   !================================================================================================================================
@@ -25,11 +25,9 @@ PROGRAM STOKESALEEXAMPLE
 #endif
 
   !Test program parameters
-  REAL(CMISSRP), PARAMETER :: HEIGHT=1.0_CMISSRP
+  REAL(CMISSRP), PARAMETER :: HEIGHT=3.0_CMISSRP
   REAL(CMISSRP), PARAMETER :: WIDTH=1.0_CMISSRP
   REAL(CMISSRP), PARAMETER :: LENGTH=1.0_CMISSRP
-
-  !Test program parameters
 
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: RegionUserNumber=2
@@ -48,6 +46,7 @@ PROGRAM STOKESALEEXAMPLE
   INTEGER(CMISSIntg), PARAMETER :: EquationsSetFieldUserNumberMovingMesh=23
   INTEGER(CMISSIntg), PARAMETER :: ProblemUserNumber=14
   INTEGER(CMISSIntg), PARAMETER :: GeneratedMeshUserNumber=15
+  INTEGER(CMISSIntg), PARAMETER :: AnalyticFieldUserNumber=16
 
   INTEGER(CMISSIntg), PARAMETER :: DomainUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: SolverMovingMeshUserNumber=1
@@ -137,34 +136,24 @@ PROGRAM STOKESALEEXAMPLE
   LOGICAL :: FIXED_WALL_NODES_MOVING_MESH_FLAG
   LOGICAL :: MOVED_WALL_NODES_MOVING_MESH_FLAG
 
-
   !CMISS variables
 
-  !Regions
   TYPE(cmfe_RegionType) :: Region
   TYPE(cmfe_RegionType) :: WorldRegion
-  !Coordinate systems
   TYPE(cmfe_CoordinateSystemType) :: CoordinateSystem
   TYPE(cmfe_CoordinateSystemType) :: WorldCoordinateSystem
-  !Basis
   TYPE(cmfe_BasisType) :: BasisGeometry
   TYPE(cmfe_BasisType) :: BasisVelocity
   TYPE(cmfe_BasisType) :: BasisPressure
-  !Nodes
   TYPE(cmfe_NodesType) :: Nodes
-  !Elements
   TYPE(cmfe_MeshElementsType) :: MeshElementsSpace
   TYPE(cmfe_MeshElementsType) :: MeshElementsVelocity
   TYPE(cmfe_MeshElementsType) :: MeshElementsPressure
-  !Meshes
   TYPE(cmfe_MeshType) :: Mesh
   TYPE(cmfe_GeneratedMeshType) :: GeneratedMesh
-  !Decompositions
   TYPE(cmfe_DecompositionType) :: Decomposition
-  !Fields
   TYPE(cmfe_FieldsType) :: Fields
-  !Field types
-  TYPE(cmfe_FieldType) :: GeometricField
+  TYPE(cmfe_FieldType) :: GeometricField,AnalyticField
   TYPE(cmfe_FieldType) :: DependentFieldStokes
   TYPE(cmfe_FieldType) :: DependentFieldMovingMesh
   TYPE(cmfe_FieldType) :: MaterialsFieldStokes
@@ -173,24 +162,17 @@ PROGRAM STOKESALEEXAMPLE
   TYPE(cmfe_FieldType) :: IndependentFieldMovingMesh
   TYPE(cmfe_FieldType) :: EquationsSetFieldStokes
   TYPE(cmfe_FieldType) :: EquationsSetFieldMovingMesh
-  !Boundary conditions
   TYPE(cmfe_BoundaryConditionsType) :: BoundaryConditionsStokes
   TYPE(cmfe_BoundaryConditionsType) :: BoundaryConditionsMovingMesh
-  !Equations sets
   TYPE(cmfe_EquationsSetType) :: EquationsSetStokes
   TYPE(cmfe_EquationsSetType) :: EquationsSetMovingMesh
-  !Equations
   TYPE(cmfe_EquationsType) :: EquationsStokes
   TYPE(cmfe_EquationsType) :: EquationsMovingMesh
-  !Problems
   TYPE(cmfe_ProblemType) :: Problem
-  !Control loops
   TYPE(cmfe_ControlLoopType) :: ControlLoop
-  !Solvers
   TYPE(cmfe_SolverType) :: DynamicSolverStokes
   TYPE(cmfe_SolverType) :: LinearSolverStokes
   TYPE(cmfe_SolverType) :: LinearSolverMovingMesh
-  !Solver equations
   TYPE(cmfe_SolverEquationsType) :: SolverEquationsStokes
   TYPE(cmfe_SolverEquationsType) :: SolverEquationsMovingMesh
 
@@ -224,13 +206,13 @@ PROGRAM STOKESALEEXAMPLE
   !
 
   !PROBLEM CONTROL PANEL
-  NUMBER_GLOBAL_X_ELEMENTS=1
+  NUMBER_GLOBAL_X_ELEMENTS=3
   NUMBER_GLOBAL_Y_ELEMENTS=3
-  NUMBER_GLOBAL_Z_ELEMENTS=1
+  NUMBER_GLOBAL_Z_ELEMENTS=3
   MESH_COMPONENT_NUMBER_SPACE=1
   MESH_COMPONENT_NUMBER_VELOCITY=1
   MESH_COMPONENT_NUMBER_PRESSURE=1
-  NUMBER_OF_DIMENSIONS=3
+  NUMBER_OF_DIMENSIONS=2
   BASIS_TYPE=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
   BASIS_XI_INTERPOLATION_SPACE=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
   BASIS_XI_INTERPOLATION_VELOCITY=CMFE_BASIS_LINEAR_LAGRANGE_INTERPOLATION
@@ -246,35 +228,35 @@ PROGRAM STOKESALEEXAMPLE
   !Set boundary conditions
   FIXED_WALL_NODES_STOKES_FLAG=.TRUE.
   MOVED_WALL_NODES_STOKES_FLAG=.TRUE.
-  INLET_WALL_NODES_STOKES_FLAG=.FALSE.
+  INLET_WALL_NODES_STOKES_FLAG=.TRUE.
   FIXED_WALL_NODES_MOVING_MESH_FLAG=.TRUE.
   MOVED_WALL_NODES_MOVING_MESH_FLAG=.TRUE.
   IF(FIXED_WALL_NODES_STOKES_FLAG) THEN
-    NUMBER_OF_FIXED_WALL_NODES_STOKES=1
+    NUMBER_OF_FIXED_WALL_NODES_STOKES=8
     ALLOCATE(FIXED_WALL_NODES_STOKES(NUMBER_OF_FIXED_WALL_NODES_STOKES))
-    FIXED_WALL_NODES_STOKES=[1]
+    FIXED_WALL_NODES_STOKES=[1,4,5,8,9,12,13,16]
   ENDIF
   IF(MOVED_WALL_NODES_STOKES_FLAG) THEN
-    NUMBER_OF_MOVED_WALL_NODES_STOKES=1
+    NUMBER_OF_MOVED_WALL_NODES_STOKES=0
     ALLOCATE(MOVED_WALL_NODES_STOKES(NUMBER_OF_MOVED_WALL_NODES_STOKES))
-    MOVED_WALL_NODES_STOKES=[2]
+    MOVED_WALL_NODES_STOKES=[7]
   ENDIF
   IF(INLET_WALL_NODES_STOKES_FLAG) THEN
-    NUMBER_OF_INLET_WALL_NODES_STOKES=1
+    NUMBER_OF_INLET_WALL_NODES_STOKES=2
     ALLOCATE(INLET_WALL_NODES_STOKES(NUMBER_OF_INLET_WALL_NODES_STOKES))
-    INLET_WALL_NODES_STOKES=[3]
+    INLET_WALL_NODES_STOKES=[2,3]
     !Set initial boundary conditions
     BOUNDARY_CONDITIONS_STOKES(1)=0.0_CMISSRP
-    BOUNDARY_CONDITIONS_STOKES(2)=0.0_CMISSRP
+    BOUNDARY_CONDITIONS_STOKES(2)=1.0_CMISSRP
     BOUNDARY_CONDITIONS_STOKES(3)=0.0_CMISSRP
   ENDIF
   IF(FIXED_WALL_NODES_MOVING_MESH_FLAG) THEN
-    NUMBER_OF_FIXED_WALL_NODES_MOVING_MESH=1
+    NUMBER_OF_FIXED_WALL_NODES_MOVING_MESH=0
     ALLOCATE(FIXED_WALL_NODES_MOVING_MESH(NUMBER_OF_FIXED_WALL_NODES_MOVING_MESH))
     FIXED_WALL_NODES_MOVING_MESH=[4]
   ENDIF
   IF(MOVED_WALL_NODES_MOVING_MESH_FLAG) THEN
-    NUMBER_OF_MOVED_WALL_NODES_MOVING_MESH=1
+    NUMBER_OF_MOVED_WALL_NODES_MOVING_MESH=0
     ALLOCATE(MOVED_WALL_NODES_MOVING_MESH(NUMBER_OF_MOVED_WALL_NODES_MOVING_MESH))
     MOVED_WALL_NODES_MOVING_MESH=[5]
     BOUNDARY_CONDITIONS_MOVING_MESH(1)=0.0_CMISSRP
@@ -339,6 +321,7 @@ PROGRAM STOKESALEEXAMPLE
   !Start the creation of a new region
   CALL cmfe_Region_Initialise(Region,Err)
   CALL cmfe_Region_CreateStart(RegionUserNumber,WorldRegion,Region,Err)
+  CALL cmfe_Region_LabelSet(Region,"StokesRegion",Err)
   !Set the regions coordinate system as defined above
   CALL cmfe_Region_CoordinateSystemSet(Region,CoordinateSystem,Err)
   !Finish the creation of the region
@@ -369,6 +352,7 @@ PROGRAM STOKESALEEXAMPLE
   ENDIF
   !Finish the creation of the basis
   CALL cmfe_Basis_CreateFinish(BasisGeometry,Err)
+
   !Start the creation of another basis
   IF(BASIS_XI_INTERPOLATION_VELOCITY==BASIS_XI_INTERPOLATION_SPACE) THEN
     BasisVelocity=BasisGeometry
@@ -395,6 +379,7 @@ PROGRAM STOKESALEEXAMPLE
     !Finish the creation of the basis
     CALL cmfe_Basis_CreateFinish(BasisVelocity,Err)
   ENDIF
+
   !Start the creation of another basis
   IF(BASIS_XI_INTERPOLATION_PRESSURE==BASIS_XI_INTERPOLATION_SPACE) THEN
     BasisPressure=BasisGeometry
@@ -438,9 +423,14 @@ PROGRAM STOKESALEEXAMPLE
   !Set the default basis
   CALL cmfe_GeneratedMesh_BasisSet(GeneratedMesh,BasisGeometry,Err)
   !Define the mesh on the region
-  CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMesh,[WIDTH,HEIGHT,LENGTH],Err)
-  CALL cmfe_GeneratedMesh_NumberOfElementsSet(GeneratedMesh,[NUMBER_GLOBAL_X_ELEMENTS,NUMBER_GLOBAL_Y_ELEMENTS, &
+  IF(NUMBER_OF_DIMENSIONS==2) THEN
+    CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMesh,[WIDTH,HEIGHT],Err)
+    CALL cmfe_GeneratedMesh_NumberOfElementsSet(GeneratedMesh,[NUMBER_GLOBAL_X_ELEMENTS,NUMBER_GLOBAL_Y_ELEMENTS],Err)
+  ELSE IF(NUMBER_OF_DIMENSIONS==3) THEN
+    CALL cmfe_GeneratedMesh_ExtentSet(GeneratedMesh,[WIDTH,HEIGHT,LENGTH],Err)
+    CALL cmfe_GeneratedMesh_NumberOfElementsSet(GeneratedMesh,[NUMBER_GLOBAL_X_ELEMENTS,NUMBER_GLOBAL_Y_ELEMENTS, &
       & NUMBER_GLOBAL_Z_ELEMENTS],Err)
+  ENDIF
   !Finish the creation of a generated mesh in the region
   CALL cmfe_Mesh_Initialise(Mesh,Err)
   CALL cmfe_GeneratedMesh_CreateFinish(GeneratedMesh,MeshUserNumber,Mesh,Err)
@@ -449,7 +439,7 @@ PROGRAM STOKESALEEXAMPLE
   !================================================================================================================================
   !
 
-  !GEOMETRIC FIELD
+  !MESH DECOMPOSITION
 
   !Create a decomposition
   CALL cmfe_Decomposition_Initialise(Decomposition,Err)
@@ -459,6 +449,12 @@ PROGRAM STOKESALEEXAMPLE
   CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition,NumberOfComputationalNodes,Err)
   !Finish the decomposition
   CALL cmfe_Decomposition_CreateFinish(Decomposition,Err)
+
+  !
+  !================================================================================================================================
+  !
+
+  !GEOMETRIC FIELD
 
   !Start to create a default (geometric) field on the region
   CALL cmfe_Field_Initialise(GeometricField,Err)
@@ -470,18 +466,14 @@ PROGRAM STOKESALEEXAMPLE
   !Set the scaling to use
   CALL cmfe_Field_ScalingTypeSet(GeometricField,CMFE_FIELD_NO_SCALING,Err)
   !Set the mesh component to be used by the field components.
-  !DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
-  !  CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,COMPONENT_NUMBER, &
-  !    & MESH_COMPONENT_NUMBER_SPACE,Err)
-  !ENDDO
-  CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,1,1,Err)
-  CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,2,1,Err)
-  CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,3,1,Err)
+  DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
+    CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,COMPONENT_NUMBER, &
+      & MESH_COMPONENT_NUMBER_SPACE,Err)
+  ENDDO
   !Finish creating the field
   CALL cmfe_Field_CreateFinish(GeometricField,Err)
-
-  CALL cmfe_Field_ParameterSetUpdateStart(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
-  CALL cmfe_Field_ParameterSetUpdateFinish(GeometricField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,Err)
+  !Update the geometric field parameters
+  CALL cmfe_GeneratedMesh_GeometricParametersCalculate(GeneratedMesh,GeometricField,Err)
 
   !
   !================================================================================================================================
@@ -518,8 +510,8 @@ PROGRAM STOKESALEEXAMPLE
 
   !Create the equations set dependent field variables for ALE Stokes
   CALL cmfe_Field_Initialise(DependentFieldStokes,Err)
-  CALL cmfe_EquationsSet_DependentCreateStart(EquationsSetStokes,DependentFieldUserNumberStokes, &
-    & DependentFieldStokes,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(EquationsSetStokes,DependentFieldUserNumberStokes,DependentFieldStokes,Err)
+  CALL cmfe_Field_VariableLabelSet(DependentFieldStokes,CMFE_FIELD_U_VARIABLE_TYPE,"U",Err)
   !Set the mesh component to be used by the field components.
   DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
     CALL cmfe_Field_ComponentMeshComponentSet(DependentFieldStokes,CMFE_FIELD_U_VARIABLE_TYPE,COMPONENT_NUMBER, &
@@ -569,18 +561,20 @@ PROGRAM STOKESALEEXAMPLE
 
   !Create the equations set materials field variables for ALE Stokes
   CALL cmfe_Field_Initialise(MaterialsFieldStokes,Err)
-  CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSetStokes,MaterialsFieldUserNumberStokes, &
-    & MaterialsFieldStokes,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSetStokes,MaterialsFieldUserNumberStokes,MaterialsFieldStokes,Err)
+  CALL cmfe_Field_VariableLabelSet(MaterialsFieldStokes,CMFE_FIELD_U_VARIABLE_TYPE,"MaterialsALE",Err)
   !Finish the equations set materials field variables
   CALL cmfe_EquationsSet_MaterialsCreateFinish(EquationsSetStokes,Err)
   CALL cmfe_Field_ComponentValuesInitialise(MaterialsFieldStokes,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     & MaterialsFieldUserNumberStokesMu,MU_PARAM_STOKES,Err)
   CALL cmfe_Field_ComponentValuesInitialise(MaterialsFieldStokes,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
     & MaterialsFieldUserNumberStokesRho,RHO_PARAM_STOKES,Err)
+
   !Create the equations set materials field variables for moving mesh
   CALL cmfe_Field_Initialise(MaterialsFieldMovingMesh,Err)
   CALL cmfe_EquationsSet_MaterialsCreateStart(EquationsSetMovingMesh,MaterialsFieldUserNumberMovingMesh, &
     & MaterialsFieldMovingMesh,Err)
+  CALL cmfe_Field_VariableLabelSet(MaterialsFieldMovingMesh,CMFE_FIELD_U_VARIABLE_TYPE,"MaterialsMovingMesh",Err)
   !Finish the equations set materials field variables
   CALL cmfe_EquationsSet_MaterialsCreateFinish(EquationsSetMovingMesh,Err)
   CALL cmfe_Field_ComponentValuesInitialise(MaterialsFieldMovingMesh,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
@@ -594,8 +588,8 @@ PROGRAM STOKESALEEXAMPLE
 
   !Create the equations set independent field variables for ALE Stokes
   CALL cmfe_Field_Initialise(IndependentFieldStokes,Err)
-  CALL cmfe_EquationsSet_IndependentCreateStart(EquationsSetStokes,IndependentFieldUserNumberStokes, &
-    & IndependentFieldStokes,Err)
+  CALL cmfe_EquationsSet_IndependentCreateStart(EquationsSetStokes,IndependentFieldUserNumberStokes,IndependentFieldStokes,Err)
+  CALL cmfe_Field_VariableLabelSet(IndependentFieldStokes,CMFE_FIELD_U_VARIABLE_TYPE,"ALE",Err)
   !Set the mesh component to be used by the field components.
   DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
     CALL cmfe_Field_ComponentMeshComponentSet(InDependentFieldStokes,CMFE_FIELD_U_VARIABLE_TYPE,COMPONENT_NUMBER, &
@@ -603,17 +597,32 @@ PROGRAM STOKESALEEXAMPLE
   ENDDO
   !Finish the equations set independent field variables
   CALL cmfe_EquationsSet_IndependentCreateFinish(EquationsSetStokes,Err)
+
   !Create the equations set independent field variables for moving mesh
   CALL cmfe_Field_Initialise(IndependentFieldMovingMesh,Err)
   CALL cmfe_EquationsSet_IndependentCreateStart(EquationsSetMovingMesh,IndependentFieldUserNumberMovingMesh, &
     & IndependentFieldMovingMesh,Err)
+  CALL cmfe_Field_VariableLabelSet(IndependentFieldMovingMesh,CMFE_FIELD_U_VARIABLE_TYPE,"MovingMesh",Err)
   !Set the mesh component to be used by the field components.
   DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
-    CALL cmfe_Field_ComponentMeshComponentSet(InDependentFieldMovingMesh,CMFE_FIELD_U_VARIABLE_TYPE,COMPONENT_NUMBER, &
+    CALL cmfe_Field_ComponentMeshComponentSet(IndependentFieldMovingMesh,CMFE_FIELD_U_VARIABLE_TYPE,COMPONENT_NUMBER, &
       & MESH_COMPONENT_NUMBER_SPACE,Err)
   ENDDO
   !Finish the equations set independent field variables
   CALL cmfe_EquationsSet_IndependentCreateFinish(EquationsSetMovingMesh,Err)
+
+  !
+  !================================================================================================================================
+  !
+
+  !ANALYTIC FIELD
+
+  !Create the equations set analytic field variables
+  CALL cmfe_Field_Initialise(AnalyticField,Err)
+  CALL cmfe_EquationsSet_AnalyticCreateStart(EquationsSetStokes,CMFE_EQUATIONS_SET_NAVIER_STOKES_EQUATION_TWO_DIM_4, &
+    & AnalyticFieldUserNumber,AnalyticField,Err)
+  !Finish the equations set analytic field variables
+  CALL cmfe_EquationsSet_AnalyticCreateFinish(EquationsSetStokes,Err)
 
   !
   !================================================================================================================================
@@ -809,6 +818,7 @@ PROGRAM STOKESALEEXAMPLE
   ENDIF
   !Finish the creation of the equations set boundary conditions
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquationsStokes,Err)
+
   !Start the creation of the equations set boundary conditions for moving mesh
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditionsMovingMesh,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquationsMovingMesh,BoundaryConditionsMovingMesh,Err)
@@ -822,8 +832,7 @@ PROGRAM STOKESALEEXAMPLE
         DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
           VALUE=0.0_CMISSRP
           CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsMovingMesh,DependentFieldMovingMesh,CMFE_FIELD_U_VARIABLE_TYPE, &
-            & 1, &
-            & CMFE_NO_GLOBAL_DERIV,NODE_NUMBER,COMPONENT_NUMBER,CONDITION,VALUE,Err)
+            & 1,CMFE_NO_GLOBAL_DERIV,NODE_NUMBER,COMPONENT_NUMBER,CONDITION,VALUE,Err)
         ENDDO
       ENDIF
     ENDDO
@@ -838,23 +847,24 @@ PROGRAM STOKESALEEXAMPLE
         DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
           VALUE=BOUNDARY_CONDITIONS_MOVING_MESH(COMPONENT_NUMBER)
           CALL cmfe_BoundaryConditions_SetNode(BoundaryConditionsMovingMesh,DependentFieldMovingMesh,CMFE_FIELD_U_VARIABLE_TYPE, &
-            & 1, &
-            & CMFE_NO_GLOBAL_DERIV,NODE_NUMBER,COMPONENT_NUMBER,CONDITION,VALUE,Err)
+            & 1,CMFE_NO_GLOBAL_DERIV,NODE_NUMBER,COMPONENT_NUMBER,CONDITION,VALUE,Err)
         ENDDO
       ENDIF
     ENDDO
   ENDIF
   !Finish the creation of the equations set boundary conditions
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquationsMovingMesh,Err)
-
+  
   !
   !================================================================================================================================
   !
 
-  !RUN SOLVERS
+  !Output Analytic analysis
+  !Call cmfe_AnalyticAnalysis_Output(DependentFieldStokes,"StokesAnalytic",Err)
 
-  !Turn of PETSc error handling
-  !CALL PETSC_ERRORHANDLING_SET_ON(ERR,ERROR,*999)
+  !
+  !================================================================================================================================
+  !
 
   !Solve the problem
   WRITE(*,'(A)') "Solving problem..."
@@ -867,13 +877,13 @@ PROGRAM STOKESALEEXAMPLE
 
   !OUTPUT
 
-  EXPORT_FIELD_IO=.TRUE.
+  EXPORT_FIELD_IO=.FALSE.
   IF(EXPORT_FIELD_IO) THEN
     WRITE(*,'(A)') "Exporting fields..."
     CALL cmfe_Fields_Initialise(Fields,Err)
     CALL cmfe_Fields_Create(Region,Fields,Err)
-    CALL cmfe_Fields_NodesExport(Fields,"ALEStokes","FORTRAN",Err)
-    CALL cmfe_Fields_ElementsExport(Fields,"ALEStokes","FORTRAN",Err)
+    CALL cmfe_Fields_NodesExport(Fields,"stokes_ale","FORTRAN",Err)
+    CALL cmfe_Fields_ElementsExport(Fields,"stokes_ale","FORTRAN",Err)
     CALL cmfe_Fields_Finalise(Fields,Err)
     WRITE(*,'(A)') "Field exported!"
   ENDIF
@@ -883,4 +893,4 @@ PROGRAM STOKESALEEXAMPLE
   WRITE(*,'(A)') "Program successfully completed."
   STOP
 
-END PROGRAM STOKESALEEXAMPLE
+END PROGRAM stokes_ale
