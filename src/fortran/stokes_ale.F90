@@ -131,8 +131,8 @@ PROGRAM stokes_ale
   TYPE(cmfe_RegionType) :: Region
   TYPE(cmfe_RegionType) :: WorldRegion
   TYPE(cmfe_ComputationEnvironmentType) :: computationEnvironment
+  TYPE(cmfe_ContextType) :: context
   TYPE(cmfe_CoordinateSystemType) :: CoordinateSystem
-  TYPE(cmfe_CoordinateSystemType) :: WorldCoordinateSystem
   TYPE(cmfe_BasisType) :: BasisGeometry
   TYPE(cmfe_BasisType) :: BasisVelocity
   TYPE(cmfe_BasisType) :: BasisPressure
@@ -179,8 +179,11 @@ PROGRAM stokes_ale
 
   !INITIALISE OPENCMISS
 
-  CALL cmfe_Initialise(WorldCoordinateSystem,WorldRegion,Err)
-  CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,Err)
+  CALL cmfe_Context_Initialise(context,err)
+  CALL cmfe_Initialise(context,err)
+  CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,err)
+  CALL cmfe_Region_Initialise(worldRegion,err)
+  CALL cmfe_Context_WorldRegionGet(context,worldRegion,err)
 
   !
   !================================================================================================================================
@@ -190,6 +193,7 @@ PROGRAM stokes_ale
 
   !Get the computational nodes information
   CALL cmfe_ComputationEnvironment_Initialise(computationEnvironment,err)
+  CALL cmfe_Context_ComputationEnvironmentGet(context,computationEnvironment,err)
   CALL cmfe_ComputationEnvironment_NumberOfWorldNodesGet(computationEnvironment,numberOfComputationalNodes,err)
   CALL cmfe_ComputationEnvironment_WorldNodeNumberGet(computationEnvironment,computationalNodeNumber,err)
 
@@ -298,7 +302,7 @@ PROGRAM stokes_ale
 
   !Start the creation of a new RC coordinate system
   CALL cmfe_CoordinateSystem_Initialise(CoordinateSystem,Err)
-  CALL cmfe_CoordinateSystem_CreateStart(CoordinateSystemUserNumber,CoordinateSystem,Err)
+  CALL cmfe_CoordinateSystem_CreateStart(CoordinateSystemUserNumber,context,CoordinateSystem,Err)
   !Set the coordinate system dimension
   CALL cmfe_CoordinateSystem_DimensionSet(CoordinateSystem,NUMBER_OF_DIMENSIONS,Err)
   !Finish the creation of the coordinate system
@@ -328,7 +332,7 @@ PROGRAM stokes_ale
   !Start the creation of new bases
   MESH_NUMBER_OF_COMPONENTS=1
   CALL cmfe_Basis_Initialise(BasisGeometry,Err)
-  CALL cmfe_Basis_CreateStart(BASIS_NUMBER_SPACE,BasisGeometry,Err)
+  CALL cmfe_Basis_CreateStart(BASIS_NUMBER_SPACE,context,BasisGeometry,Err)
   !Set the basis type (Lagrange/Simplex)
   CALL cmfe_Basis_TypeSet(BasisGeometry,BASIS_TYPE,Err)
   !Set the basis xi number
@@ -354,7 +358,7 @@ PROGRAM stokes_ale
      !Initialise a new velocity basis
      CALL cmfe_Basis_Initialise(BasisVelocity,Err)
      !Start the creation of a basis
-     CALL cmfe_Basis_CreateStart(BASIS_NUMBER_VELOCITY,BasisVelocity,Err)
+     CALL cmfe_Basis_CreateStart(BASIS_NUMBER_VELOCITY,context,BasisVelocity,Err)
      !Set the basis type (Lagrange/Simplex)
      CALL cmfe_Basis_TypeSet(BasisVelocity,BASIS_TYPE,Err)
      !Set the basis xi number
@@ -383,7 +387,7 @@ PROGRAM stokes_ale
      !Initialise a new pressure basis
      CALL cmfe_Basis_Initialise(BasisPressure,Err)
      !Start the creation of a basis
-     CALL cmfe_Basis_CreateStart(BASIS_NUMBER_PRESSURE,BasisPressure,Err)
+     CALL cmfe_Basis_CreateStart(BASIS_NUMBER_PRESSURE,context,BasisPressure,Err)
      !Set the basis type (Lagrange/Simplex)
      CALL cmfe_Basis_TypeSet(BasisPressure,BASIS_TYPE,Err)
      !Set the basis xi number
@@ -654,7 +658,7 @@ PROGRAM stokes_ale
   !Start the creation of a problem.
   CALL cmfe_Problem_Initialise(Problem,Err)
   CALL cmfe_ControlLoop_Initialise(ControlLoop,Err)
-  CALL cmfe_Problem_CreateStart(ProblemUserNumber,[CMFE_PROBLEM_FLUID_MECHANICS_CLASS,CMFE_PROBLEM_STOKES_EQUATION_TYPE, &
+  CALL cmfe_Problem_CreateStart(ProblemUserNumber,context,[CMFE_PROBLEM_FLUID_MECHANICS_CLASS,CMFE_PROBLEM_STOKES_EQUATION_TYPE, &
        & CMFE_PROBLEM_ALE_STOKES_SUBTYPE],Problem,Err)
   !Finish the creation of a problem.
   CALL cmfe_Problem_CreateFinish(Problem,Err)
@@ -883,7 +887,7 @@ PROGRAM stokes_ale
   ENDIF
 
   !Finialise CMISS
-  CALL cmfe_Finalise(Err)
+  CALL cmfe_Finalise(context,Err)
   WRITE(*,'(A)') "Program successfully completed."
   STOP
 
