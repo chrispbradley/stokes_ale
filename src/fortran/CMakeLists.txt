@@ -1,5 +1,5 @@
 add_executable(stokes_ale_fortran stokes_ale.F90)
 
-target_link_libraries(stokes_ale_fortran PRIVATE opencmisslibs)
+target_link_libraries(stokes_ale_fortran PRIVATE OpenCMISS::libOpenCMISS_Fortran)
 
 install(TARGETS stokes_ale_fortran DESTINATION bin)
