@@ -782,7 +782,7 @@ PROGRAM StokesALE
      DO NODE_COUNTER=1,NUMBER_OF_FIXED_WALL_NODES_STOKES
         NODE_NUMBER=FIXED_WALL_NODES_STOKES(NODE_COUNTER)
         CONDITION=OC_BOUNDARY_CONDITION_FIXED_WALL
-        CALL OC_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,BoundaryNodeDomain,Err)
+        CALL OC_Decomposition_NodeDomainGet(Decomposition,1,NODE_NUMBER,BoundaryNodeDomain,Err)
         IF(BoundaryNodeDomain==ComputationalNodeNumber) THEN
            DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
               VALUE=0.0_OC_RP
@@ -797,7 +797,7 @@ PROGRAM StokesALE
      DO NODE_COUNTER=1,NUMBER_OF_MOVED_WALL_NODES_STOKES
         NODE_NUMBER=MOVED_WALL_NODES_STOKES(NODE_COUNTER)
         CONDITION=OC_BOUNDARY_CONDITION_MOVED_WALL
-        CALL OC_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,BoundaryNodeDomain,Err)
+        CALL OC_Decomposition_NodeDomainGet(Decomposition,1,NODE_NUMBER,BoundaryNodeDomain,Err)
         IF(BoundaryNodeDomain==ComputationalNodeNumber) THEN
            DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
               VALUE=0.0_OC_RP
@@ -812,7 +812,7 @@ PROGRAM StokesALE
      DO NODE_COUNTER=1,NUMBER_OF_INLET_WALL_NODES_STOKES
         NODE_NUMBER=INLET_WALL_NODES_STOKES(NODE_COUNTER)
         CONDITION=OC_BOUNDARY_CONDITION_FIXED_INLET
-        CALL OC_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,BoundaryNodeDomain,Err)
+        CALL OC_Decomposition_NodeDomainGet(Decomposition,1,NODE_NUMBER,BoundaryNodeDomain,Err)
         IF(BoundaryNodeDomain==ComputationalNodeNumber) THEN
            DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
               VALUE=BOUNDARY_CONDITIONS_STOKES(COMPONENT_NUMBER)
@@ -833,7 +833,7 @@ PROGRAM StokesALE
      DO NODE_COUNTER=1,NUMBER_OF_FIXED_WALL_NODES_MOVING_MESH
         NODE_NUMBER=FIXED_WALL_NODES_MOVING_MESH(NODE_COUNTER)
         CONDITION=OC_BOUNDARY_CONDITION_FIXED_WALL
-        CALL OC_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,BoundaryNodeDomain,Err)
+        CALL OC_Decomposition_NodeDomainGet(Decomposition,1,NODE_NUMBER,BoundaryNodeDomain,Err)
         IF(BoundaryNodeDomain==ComputationalNodeNumber) THEN
            DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
               VALUE=0.0_OC_RP
@@ -848,7 +848,7 @@ PROGRAM StokesALE
      DO NODE_COUNTER=1,NUMBER_OF_MOVED_WALL_NODES_MOVING_MESH
         NODE_NUMBER=MOVED_WALL_NODES_MOVING_MESH(NODE_COUNTER)
         CONDITION=OC_BOUNDARY_CONDITION_MOVED_WALL
-        CALL OC_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,BoundaryNodeDomain,Err)
+        CALL OC_Decomposition_NodeDomainGet(Decomposition,1,NODE_NUMBER,BoundaryNodeDomain,Err)
         IF(BoundaryNodeDomain==ComputationalNodeNumber) THEN
            DO COMPONENT_NUMBER=1,NUMBER_OF_DIMENSIONS
               VALUE=BOUNDARY_CONDITIONS_MOVING_MESH(COMPONENT_NUMBER)
